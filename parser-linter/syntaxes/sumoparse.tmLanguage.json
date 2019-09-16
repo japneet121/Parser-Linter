@@ -13,7 +13,7 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.sumoparse",
-				"match": "\\b(if|while|for|return)\\b"
+				"match": "\\b(if|while|for|return|transform|TRANSFORM|FIELD_TYPE|field_type|sourcetype|SOURCETYPE)\\b"
 			}]
 		},
 		"strings": {

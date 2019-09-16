@@ -14,13 +14,18 @@
 	],
 	"main": "./extension.js",
 	"contributes": {
-		"commands": [
-			{
-				"command": "extension.helloWorld",
-				"title": "Hello World"
-			}
-		]
-	},
+        "languages": [{
+            "id": "sumoparse",
+            "aliases": ["Sumo Parsing Language", "sumoparse"],
+            "extensions": [".conf"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "sumoparse",
+            "scopeName": "source.conf",
+            "path": "./syntaxes/sumoparse.tmLanguage.json"
+        }]
+    },
 	"scripts": {
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"test": "node ./node_modules/vscode/bin/test"
