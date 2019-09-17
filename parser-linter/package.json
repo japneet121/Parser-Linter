@@ -1,7 +1,7 @@
 {
 	"name": "parser-linter",
 	"displayName": "parser-linter",
-	"description": "a linter for sumo parsing language",
+	"description": "Development Tool for Sumo Parsing Language",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.38.0"
@@ -10,30 +10,28 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.helloWorld"
+		"*"
 	],
-	"main": "./extension.js",
+	"main": "./out/extension.js",
 	"contributes": {
-        "languages": [{
-            "id": "sumoparse",
-            "aliases": ["Sumo Parsing Language", "sumoparse"],
-            "extensions": [".conf"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "sumoparse",
-            "scopeName": "source.conf",
-            "path": "./syntaxes/sumoparse.tmLanguage.json"
-        }]
-    },
+		"commands": [
+			{
+				"command": "extension.helloWorld",
+				"title": "Hello World"
+			}
+		]
+	},
 	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
 		"postinstall": "node ./node_modules/vscode/bin/install",
-		"test": "node ./node_modules/vscode/bin/test"
+		"test": "npm run compile && node ./node_modules/vscode/bin/test"
 	},
 	"devDependencies": {
 		"typescript": "^3.3.1",
 		"vscode": "^1.1.28",
-		"eslint": "^5.13.0",
+		"tslint": "^5.12.1",
 		"@types/node": "^10.12.21",
 		"@types/mocha": "^2.2.42"
 	}
