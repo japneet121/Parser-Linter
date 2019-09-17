@@ -14,6 +14,23 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"languages": [{
+            "id": "sumoparse",
+            "aliases": ["Sumo Parsing Language", "sumoparse"],
+            "extensions": [".conf"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "sumoparse",
+            "scopeName": "source.conf",
+            "path": "./syntaxes/sumoparse.tmLanguage.json"
+		}],
+		"snippets": [
+			{
+				"language": "sumoparse",
+				"path": "./snippets/sumoparse.snippets.json"
+			}
+		],
 		"commands": [
 			{
 				"command": "extension.helloWorld",

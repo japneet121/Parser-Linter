@@ -1,0 +1,240 @@
+{
+    "Transform":{
+		"prefix": "transform",
+		"body": [
+			"[transform:$1]",
+			"#your code goes here"
+		  ],
+		"description": "Creates a transform snippet"
+	},
+	"Sourcetype":{
+		"prefix": "sourcetype",
+		"body": [
+			"[sourcetype:$1]",
+			"#your code goes here",
+			"#Use your transforms and parsing code here."
+		  ],
+		"description": "Creates a sourcetype snippet"
+	},
+	"Field_Type": {
+		"prefix": "FIELD",
+		"body": "FIELD_TYPE:<variable-name>=${1|Network,URL,Registry Key,IP Address,Host Name,File,Geo Location,User,MAC Address,Hash,None|}",
+		"description": "Lists out the type of linktype that can be assigned to a field_type."
+    },
+    "Alias": {
+		"prefix": "ALIAS",
+		"body": "ALIAS:<old_field_name> = <alias_field_name>",
+		"description": "Creates a read only reference between alias_field_name and old_field_name"
+    },
+    "Burndown_factor": {
+		"prefix": "BURNDOWN",
+		"body": "BURNDOWN_FACTOR =${1|Identity,Network,Alert,Application,Error,Operational|}",
+		"description": "Creates a burndown factor snippet with the choice of Factor."
+    },
+    "Format": {
+		"prefix": "FORMAT",
+		"body": "FORMAT =${1|REGEX,CSV,JSON,XML|}",
+		"description": "Creates a snippet for format with the choice of format type."
+    },
+    "Factor": {
+		"prefix": "FACTOR",
+		"body": "FACTOR:${1|Identity,Network,Alert,Application,Error,Operational|}:<required_fields> = <field_name>, <field_name>",
+		"description": "Creates a snippet for factor creation with the choice of factor and the fields to assign to it."
+	},
+	"Hub": {
+		"prefix": "HUB",
+		"body": "HUB:<field_name> =",
+		"description": "Creates a snippet for Hub creation."
+	},
+	"Start_time_handling": {
+		"prefix": "START_TIME_HANDLING",
+		"body": "START_TIME_HANDLING = ${1|GIVEN,ROUND,CONSTANT|}",
+		"description": "Creates a snippet for start-time handling with the choice of handling."
+	},
+	"Default": {
+		"prefix": "DEFAULT_(START/END)_TIME",
+		"body": "DEFAULT_${1|START_TIME,END_TIME|} = ${2|DAY,None,hour|}",
+		"description": "Creates a snippet for Default_start_time or Default_end_time with the choice of handling."
+	},
+	"End_time_handling": {
+		"prefix": "END_TIME_HANDLING",
+		"body": "END_TIME_HANDLING = ${1|GIVEN,ROUND,CONSTANT|}",
+		"description": "Creates a snippet for end-time handling with the choice of handling."
+	},
+	"Start_Time_Field": {
+		"prefix": "START_TIME_FIELD",
+		"body": "START_TIME_FIELD = $1",
+		"description": "Creates a snippet for start-time-field."
+	},
+	"Time_parser": {
+		"prefix": "TIME_PARSER",
+		"body": "TIME_PARSER = ${1|X1,X1000,yyyy/MM/dd HH:mm:ss,DD/MM/YYYY HH:mm:ss.SSS,YYYY/MM/DD hh:mm:ss,MMM dd H:mm:ss,MMM DD YYYY h:mm,yyyy-MM-dd HH:mm:ss,E MMM dd HH:mm:ss zz yyyy,E MMM dd HH:mm:ss zzz yyyy,EEE MMM dd HH:mm:ss yyyy,EEE MMM  d HH:mm:ss yyyy,EEE MMM d HH:mm:ss yyyy,M/dd/yy HH:mm,yyyy-MM-dd'T'HH:mm:ss.SSSX,yyyy-MM-dd'T'HH:mm:ss.SSSSSSX,yyyy-MM-dd HH:mm:ssX,yyyy-MM-dd HH:mm:ss zz,yyyy-MM-dd HH:mm:ss zzz,yyyy-MM-dd'T'HH:mm:ssX,yyyy-MM-dd'T'HH:mm:ssz,dd/MMM/yyyy:HH:mm:ss Z,EEE MMM dd HH:mm:ss.SSSSSS yyyy,\"yyyy-MM-dd HH:mm:ss SSS\",\"yyyy-MM-dd HH:mm:ss SS\",M/d/yyyy h:m:s a,yyyy-MM-dd'T'HH:mm:ssxxx|}",
+		"description": "Creates a snippet for time-parser with choice of time-date syntax."
+	},
+	"Time_zone": {
+		"prefix": "TIME_ZONE",
+		"body": "TIME_ZONE=${1|UTC,America/Los_Angeles,US/Pacific,None|}",
+		"description": "Creates a snippet for time-zone with the choice of time-zone."
+	},
+	"Set": {
+		"prefix": "SET",
+		"body": "SET:<field> = <string>",
+		"description": "Creates a snippet for set-field."
+	},
+	"transform_if": {
+		"prefix": "TRANSFORM_IF/PRESENT",
+		"body": "TRANSFORM_IF:<field_name>:<regex> = <transform_stanza_name>",
+		"description": "Creates a snippet for transform_if stanzas."
+	},
+	"transform": {
+		"prefix": "TRANSFORM_(IF/FIELD_IF)_PRESENT",
+		"body": "TRANSFORM${1|_IF_PRESENT,_FIELD_IF_PRESENT|}:<field_name> = <transform_stanza_name>",
+		"description": "Creates a snippet for transform stanzas."
+	},
+	"transform_all": {
+		"prefix": "TRANSFORM_ALL",
+		"body": "TRANSFORM_ALL:<field_name> = <transform_stanza_name>,<regex>",
+		"description": "Creates a snippet for transform_all stanzas."
+	},
+	"transform_cascade": {
+		"prefix": "TRANSFORM_CASCADE",
+		"body": "TRANSFORM_CASCADE:<field_name> = <transform_name_1>,<transform_name_2>",
+		"description": "Creates a snippet for transform_cascade stanzas."
+	},
+	"drop": {
+		"prefix": "DROP",
+		"body": "DROP ${1|:<field_name> , |}= ${2|true,false,empty,regex|}",
+		"description": "Creates a snippet for drop with choice of value."
+	},
+	"clear": {
+		"prefix": "CLEAR",
+		"body": "CLEAR:<field_name> = <write your regex here>",
+		"description": "Creates a snippet for clear statement."
+	},
+	"rename": {
+		"prefix": "RENAME_FIELD",
+		"body": "RENAME_FIELD:<new_field_name> = <old_field_name>",
+		"description": "Creates a snippet for rename_field statement."
+	},
+	"copy": {
+		"prefix": "COPY_FIELD",
+		"body": "COPY_FIELD:<target_field_name> = <source_field_name>",
+		"description": "Creates a snippet for rename_field statement."
+	},
+	"field/iter": {
+		"prefix": "FIELD/ITER_PREFIX/SUFFIX",
+		"body": "${1|FIELD,ITER|}_${2|PREFIX,SUFFIX|} = {{field_name}}",
+		"description": "Creates a snippet for Field/Iter-prefix/suffix statement."
+	},
+	"add_values": {
+		"prefix": "ADD_VALUES",
+		"body": "ADD_VALUES = ${1|true,false|}",
+		"description": "Creates a snippet for add_value statement."
+	},
+	"join_list": {
+		"prefix": "JOIN_LIST",
+		"body": "JOIN_LIST: <field_name>= <seperator goes here>",
+		"description": "Creates a snippet for joining lists based on the choice of seperator."
+	},
+	"split_list": {
+		"prefix": "SPLIT_LIST",
+		"body": "SPLIT_LIST_AT_ELEMENT:<field_name> = <index>",
+		"description": "Creates a snippet for splitting lists based on the choice of index."
+	},
+	"replace_list": {
+		"prefix": "REPLACE_LIST_WITH_ELEMENT",
+		"body": "REPLACE_LIST_WITH_ELEMENT:<field_name> = <index>",
+		"description": "Creates a snippet for replace_list."
+	},
+	"reverse_list": {
+		"prefix": "REVERSE_LIST",
+		"body": "REVERSE_LIST:<field_name> = <write anything here, this is an ignored but mandatory field>",
+		"description": "Creates a snippet for reverse_list."
+	},
+	"wrapper": {
+		"prefix": "WRAPPER",
+		"body": "WRAPPER = <Transform name>",
+		"description": "Creates a snippet for wrapper."
+	},
+	"event_multiline": {
+		"prefix": "EVENT_MULTILINE",
+		"body": "EVENT_MULTILINE = ${1|true,false|}",
+		"description": "Creates a snippet for event_multiline."
+	},
+	"regex": {
+		"prefix": "REGEX",
+		"body": "REGEX = <paste your regex here>",
+		"description": "Creates a snippet for regex."
+	},
+	"repeat_match": {
+		"prefix": "REPEAT_MATCH",
+		"body": "REPEAT_MATCH =${1|true,false|}",
+		"description": "Creates a snippet for repeat_match."
+	},
+	"strip_fields": {
+		"prefix": "STRIP_FIELDS",
+		"body": "STRIP_FIELDS =${1|true,false|}",
+		"description": "Creates a snippet for strip_fields."
+	},
+	"field_delims": {
+		"prefix": "FIELD_DELIMS",
+		"body": "FIELD_DELIMS =$1",
+		"description": "Creates a snippet for field_delims."
+	},
+	"field_header_delims": {
+		"prefix": "FIELD_HEADER_DELIMS ",
+		"body": "FIELD_HEADER_DELIMS = <quoted_string>",
+		"description": "Creates a snippet for field_header_delims."
+	},
+	"field_start_index": {
+		"prefix": "FIELD_START_INDEX",
+		"body": "FIELD_START_INDEX = <integer>",
+		"description": "Creates a snippet for field_start_index."
+	},
+	"field_quote": {
+		"prefix": "FIELD_QUOTE",
+		"body": "FIELD_QUOTE = <quoted_string>",
+		"description": "Creates a snippet for field_quote."
+	},
+	"field_header_quote": {
+		"prefix": "FIELD_HEADER_QUOTE",
+		"body": "FIELD_HEADER_QUOTE = <quoted_string>",
+		"description": "Creates a snippet for field_header_quote."
+	},
+	"fields": {
+		"prefix": "FIELDS",
+		"body": "FIELDS = <field_name>, <field_name>, ...",
+		"description": "Creates a snippet for making field_names as fields."
+	},
+	"optional_fields": {
+		"prefix": "OPTIONAL_FIELDS",
+		"body": "OPTIONAL_FIELDS = <field_name>, <field_name>, ...",
+		"description": "Creates a snippet for optional_fields ."
+	},
+	"root_tag": {
+		"prefix": "ROOT_TAG",
+		"body": "ROOT_TAG = <element_name>, <element_name>, ...",
+		"description": "Creates a snippet for root_tag."
+	},
+	"log_entry_tag": {
+		"prefix": "LOG_ENTRY_TAG",
+		"body": "LOG_ENTRY_TAG:<element_name> = <attribute_name>, <attribute_name>, ...",
+		"description": "Creates a snippet for log_entry_tag."
+	},
+	"dictionary_tag": {
+		"prefix": "DICTIONARY_TAG",
+		"body": "DICTIONARY_TAG:<element_name> = <attribute_name>, ...",
+		"description": "Creates a snippet for dictionary_tag."
+	},
+	"field_tag": {
+		"prefix": "FIELD_TAG",
+		"body": "FIELD_TAG:<element_name> =  <attribute_name>",
+		"description": "Creates a snippet for field_tag."
+	},
+	"json_drop": {
+		"prefix": "JSON_DROP_NULLS",
+		"body": "JSON_DROP_NULLS = ${1|true,false|}",
+		"description": "Creates a snippet for json_drop_nulls based on the choice."
+	}
+
+}

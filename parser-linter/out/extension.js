@@ -54,6 +54,9 @@ function updateDiagnostics(document, collection) {
                 match = reg_match_regex.exec(line);
             }
             collection.set(document.uri, diag);
+            for (let index = 0; index < lines.length; index++) {
+                const element = lines[index];
+            }
         }
     }
     else {
