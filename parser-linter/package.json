@@ -10,7 +10,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"*"
+		"*", "onLanguage:sumoparsing"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -34,5 +34,13 @@
 		"tslint": "^5.12.1",
 		"@types/node": "^10.12.21",
 		"@types/mocha": "^2.2.42"
-	}
+	},
+	"languages": [{
+        "id": "sumoparsing",
+        "extensions": [ ".conf" ],
+        "aliases": [ "SumoParsing", "sumoparsing" ]
+	}],
+	"files.associations": {
+        "*.conf": "sumoparsing"
+    }
 }

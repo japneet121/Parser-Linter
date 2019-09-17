@@ -13,6 +13,9 @@ export function activate(context: vscode.ExtensionContext) {
 			updateDiagnostics(editor.document, collection);
 		}
 	}));
+	vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
+		updateDiagnostics(document, collection);
+	});
 }
 
 function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): void {

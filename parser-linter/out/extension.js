@@ -11,6 +11,9 @@ function activate(context) {
             updateDiagnostics(editor.document, collection);
         }
     }));
+    vscode.workspace.onDidSaveTextDocument((document) => {
+        updateDiagnostics(document, collection);
+    });
 }
 exports.activate = activate;
 function updateDiagnostics(document, collection) {
