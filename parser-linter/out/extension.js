@@ -459,6 +459,12 @@ default = false\n\
 Drops all null values from the JSON.\n\
 This Attributes is  Specific to JSON Format" });
     }
+    else if (word == "sourcetype") {
+        return new vscode.Hover({ language: "sourcetype",
+            value: "[<sourcetype>:<sourcetype name>]\n\
+            sourcetype - which defines the entry point for the overall parser and contains attributes that control the overall execution of the parser"
+        });
+    }
 }
 function updateDiagnostics(document, collection) {
     if (document) {
