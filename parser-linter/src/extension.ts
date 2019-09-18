@@ -178,7 +178,7 @@ If a field exists call the transform_stanza_name on the event"})
 If the field exists call the transform_stanza_name, using <field_name> as the new log entry."})
 	}
 
-	else if (word == "TRANSFORM"){
+	else if (word == "TRANSFORM" || word == "TRANSFORM".toLowerCase() ){
 		return new vscode.Hover({language:"TRANSFORM",
         value:"TRANSFORM:<field_name> = <transform_stanza_name>\n\
 Apply the transform to the specified field.\n\
