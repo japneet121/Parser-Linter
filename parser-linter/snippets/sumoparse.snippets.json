@@ -17,7 +17,7 @@
 		"description": "Creates a sourcetype snippet"
 	},
 	"Field_Type": {
-		"prefix": "FIELD",
+		"prefix": "FIELD_TYPE",
 		"body": "FIELD_TYPE:<variable-name>=${1|Network,URL,Registry Key,IP Address,Host Name,File,Geo Location,User,MAC Address,Hash,None|}",
 		"description": "Lists out the type of linktype that can be assigned to a field_type."
     },
