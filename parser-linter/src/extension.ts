@@ -39,10 +39,11 @@ function updateDiagnostics(document: vscode.TextDocument, collection: vscode.Dia
     let diag=[];
     if (document) {
         let lines = document.getText().split('\n');
-        let reg_match_regex = new RegExp(/(r\|.+?(\n|$))|REGEX= *(.+?($|\n))/, 'ig');
+        let reg_match_regex = new RegExp(/(r\|.+?(\n|$))|REGEX *= *(.+?($|\n))/, 'ig');
         for (let index = 0; index < lines.length; index++) {
             
-            let line=lines[index];
+			let line=lines[index];
+			let line_len= line.length;
             var match = reg_match_regex.exec(line);
             console.log(match);
             if(!match){
@@ -66,7 +67,7 @@ function updateDiagnostics(document: vscode.TextDocument, collection: vscode.Dia
                     diag.push({
                         code: '',
                         message: 'Not a Valid Regex',
-                        range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index+match_exp.length)),
+                        range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index+match_exp.length+line_len)),
                         severity: vscode.DiagnosticSeverity.Error,
                         source: '',
                         relatedInformation: [
@@ -573,8 +574,9 @@ function keywordValidator(document: vscode.TextDocument, collection: vscode.Diag
         
         for (let index = 0; index < lines.length; index++) {
 
-            let line=lines[index];
-            let reg_match_regex = new RegExp(/field_type\s*:[a-zA-Z0-9_\-]+=\s*([a-zA-Z_\-\\0-9]+)/, 'ig');
+			let line=lines[index];
+			let line_len= line.length;
+            let reg_match_regex = new RegExp(/field_type\s*:[a-zA-Z0-9_\-]+=\s*([a-zA-Z_\-\\0-9 ]+)/, 'ig');
             var match = reg_match_regex.exec(line);
   
             while (match) {
@@ -591,7 +593,7 @@ function keywordValidator(document: vscode.TextDocument, collection: vscode.Diag
                     diag.push({
                         code: '',
                         message: 'Not a Valid Linktype',
-                        range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index+match_exp.length)),
+                        range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index+match_exp.length+line_len)),
                         severity: vscode.DiagnosticSeverity.Error,
                         source: '',
                         relatedInformation: [
