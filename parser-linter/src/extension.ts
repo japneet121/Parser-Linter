@@ -13,70 +13,77 @@ export function activate(context: vscode.ExtensionContext) {
             }
         },
     );
-    const collection = vscode.languages.createDiagnosticCollection('test');
+	const collection = vscode.languages.createDiagnosticCollection('test');
     if (vscode.window.activeTextEditor) {
-        updateDiagnostics(vscode.window.activeTextEditor.document, collection);
+        DiagnosticCheck(vscode.window.activeTextEditor.document,collection); 
     }
-    context.subscriptions.push(disposable,vscode.window.onDidChangeActiveTextEditor(editor => {
+    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
         if (editor) {
-            updateDiagnostics(editor.document, collection);
+            DiagnosticCheck(editor.document,collection); 
         }
     }));
     vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
-        updateDiagnostics(document, collection);
+        DiagnosticCheck(document,collection); 
     });
-    
 }
 
-function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): void {
-	if (document) {
-		let lines = document.getText().split('\n');
-		let diag=[];
-		let reg_match_regex = new RegExp(/(r\|.+?(\n|$))|REGEX= *(.+?($|\n))/, 'ig');
-		for (let index = 0; index < lines.length; index++) {
+function DiagnosticCheck(document: vscode.TextDocument, collection: vscode.DiagnosticCollection){
+    let diag=[];
+    diag.push(...updateDiagnostics(document, collection));
+    diag.push(...keywordValidator(document, collection));
+    collection.set(document.uri, diag);
 
+}
+
+function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): Array<any> {
+    let diag=[];
+    if (document) {
+        let lines = document.getText().split('\n');
+        let reg_match_regex = new RegExp(/(r\|.+?(\n|$))|REGEX *= *(.+?($|\n))/, 'ig');
+        for (let index = 0; index < lines.length; index++) {
+            
 			let line=lines[index];
-			var match = reg_match_regex.exec(line);
-			if(!match){
-
-			}
-			while (match) {
-				let match_exp='';
-				if(match[3]){
-					match_exp=match[3];
-				}
-				else{
-					match_exp=match[0].substring(2);
-				}
-				console.log(match);
-
-				try {
-					let r=new RegExp(match_exp);
-				}
-				catch (exception) {
-					var message = exception.message;
-					diag.push({
-						code: '',
-						message: 'Not a Valid Regex',
-						range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index+match_exp.length)),
-						severity: vscode.DiagnosticSeverity.Error,
-						source: '',
-						relatedInformation: [
-							new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index+1, match.index), new vscode.Position(index+1, match.index+match[0].length))), message)
-						]
-					});
-
-				}
-				match = reg_match_regex.exec(line);
-			}
-			collection.set(document.uri, diag);
-			for (let index = 0; index < lines.length; index++) {
-				const element = lines[index];
-			}
-		}
-	} else {
-		collection.clear();
-	}
+			let line_len= line.length;
+            var match = reg_match_regex.exec(line);
+            console.log(match);
+            if(!match){
+                
+            }
+            while (match) {
+                let match_exp='';
+                if(match[3]){
+                    match_exp=match[3];
+                }
+                else{
+                    match_exp=match[0].substring(2);
+                }
+                console.log(match);
+                
+                try {
+                    let r=new RegExp(match_exp);
+                }
+                catch (exception) {
+                    var message = exception.message;
+                    diag.push({
+                        code: '',
+                        message: 'Not a Valid Regex',
+                        range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index+match_exp.length+line_len)),
+                        severity: vscode.DiagnosticSeverity.Error,
+                        source: '',
+                        relatedInformation: [
+                            new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index+1, match.index), new vscode.Position(index+1, match.index+match[0].length))), message)
+                        ]
+                    });
+                    
+                }
+                match = reg_match_regex.exec(line);
+            }
+            
+        }
+    } else {
+        collection.clear();
+    }
+    return(diag);
 }
 
 function returnHoverInfo(word:string){
@@ -555,6 +562,54 @@ This Attributes is  Specific to JSON Format"})
             sourcetype - which defines the entry point for the overall parser and contains attributes that control the overall execution of the parser"
 
         })}
+}
+
+
+function keywordValidator(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): Array<any> {
+    let diag = []; 
+    if (document) {
+        
+        let lines = document.getText().split('\n');      
+        let reserved_keywords = ['IP Address',"Network","MAC Address","URL","Hash","Registry Key","User","Host Name","File","Geo Location"];
+        
+        for (let index = 0; index < lines.length; index++) {
+
+			let line=lines[index];
+			let line_len= line.length;
+            let reg_match_regex = new RegExp(/field_type\s*:[a-zA-Z0-9_\-]+=\s*([a-zA-Z_\-\\0-9 ]+)/, 'ig');
+            var match = reg_match_regex.exec(line);
+  
+            while (match) {
+                let match_exp= '';
+              if(match[1]){
+                    match_exp=match[1];
+                }
+                else{
+                    match_exp=match[0].substring(11).replace("=","").trim();
+                }
+                //console.log(match_exp);
+                if(reserved_keywords.indexOf(match_exp) < 0){
+					var message = 'Not a Valid Linktype. \n You can choose a lintype from below : \n IP Address , Network , MAC Address , URL , Hash , Registry Key , User , Host Name , File , Geo Location';
+                    diag.push({
+                        code: '',
+                        message: 'Not a Valid Linktype',
+                        range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index+match_exp.length+line_len)),
+                        severity: vscode.DiagnosticSeverity.Error,
+                        source: '',
+                        relatedInformation: [
+                            new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index+1, match.index), new vscode.Position(index+1, match.index+match[0].length))), message)
+                        ]
+                    });
+                    //console.log("Present");
+                }
+                match = reg_match_regex.exec(line);
+        }
+        
+    }
+}else {
+        collection.clear();
+    }
+    return(diag);
 }
 // this method is called when your extension is deactivated
 export function deactivate() {
