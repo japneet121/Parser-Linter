@@ -152,7 +152,7 @@ function validateTransforms(document: vscode.TextDocument, collection: vscode.Di
 					if (match != null) {
 						diag.push({
 							code: '',
-							message: 'Transform not present',
+							message: 'Transform definition not present.',
 							range: new vscode.Range(new vscode.Position(index, match.index+match[0].length-match[1].length), new vscode.Position(index, match.index + match[0].length)),
 							severity: vscode.DiagnosticSeverity.Error,
 							source: '',
