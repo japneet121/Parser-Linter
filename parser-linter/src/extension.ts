@@ -77,27 +77,34 @@ function jsonTemplate() {
 \n\
 [sourcetype:Parser_Name]\n\
 FORMAT=JSON\n\
-START_TIME_FIELD = eventTime\n\
-TIME_PARSER = time_formatter\n\
-transform = transform_name\n\
-transform-factor=<parser_Name>_Factor\n\
+START_TIME_FIELD = <eventTime>\n\
+TIME_PARSER = <time_formatter>\n\
+TRANSFORM = <transform_name>\n\
+TRANSFORM-factor=<parser_Name>_Factor\n\
 \n\
-[transform:trasnform_name]\n\
-VARIABLE_TRANSFORM_INDEX = field_name\n\
-VARIABLE_TRANSFORM:filed_value1 = trasnform_value1\n\
-VARIABLE_TRANSFORM:field_value2 = transform_value2\n\
+[transform:<transform_name>]\n\
+#VARIABLE_TRANSFORM_INDEX = <field_name>\n\
+#VARIABLE_TRANSFORM:<field_value1> = <transform_value1>\n\
+#VARIABLE_TRANSFORM:<field_value2> = <transform_value2>\n\
 \n\
 [transform:<parser_Name>_Factor]\n\
-#LINKS\n\
-FIELD_TYPE:IP Address_field = IP Address\n\
-FIELD_TYPE:User_field = User\n\
-FIELD_TYPE:Hostname_field = Host Name\n\
-FIELD_TYPE:File_field = File\n\
 \n\
-#FACTORS\n\
-FACTOR:Identity:<mandatory_field>=optional_fields\n\
+#Create your LINK-KEYS here\n\
+FIELD_TYPE:<IP_Address_field_name> = IP Address\n\
+FIELD_TYPE:<Network_field_name> = Network\n\
+FIELD_TYPE:<MAC_Address_field_name> = MAC Address\n\
+FIELD_TYPE:<URL_field_name> = URL\n\
+FIELD_TYPE:<Hash_field_name> = Hash\n\
+FIELD_TYPE:<Registry_Key_field_name> = Hash\n\
+FIELD_TYPE:<Hostname_field_name> = Host Name\n\
+FIELD_TYPE:<File_field_name> = File\n\
+FIELD_TYPE:<User_field_name> = User\n\
+FIELD_TYPE:<Geo Location_field_name> =Geo Location\n\
 \n\
-FACTOR:Application=optional_fields\n\
+#Create your FACTORS here\n\
+FACTOR:<Factor_Name>:<mandatory_field>=optional_fields\n\
+\n\
+FACTOR:<Factor_Name>:<mandatory_field>=<optional_fields>\n\
 				");
 			
 			});
