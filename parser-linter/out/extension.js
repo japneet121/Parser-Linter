@@ -9,6 +9,24 @@ function activate(context) {
             return returnHoverInfo(word);
         }
     });
+    let disposable1 = vscode.languages.registerFoldingRangeProvider('sumoparse', {
+        provideFoldingRanges(document, context, token) {
+            //console.log('folding range invoked'); // comes here on every character edit
+            let sectionStart = 0, FR = [], re = /\[(transform|sourcetype):.*\]/; // regex to detect start of region
+            for (let i = 0; i < document.lineCount; i++) {
+                if (re.test(document.lineAt(i).text)) {
+                    if (sectionStart > 0) {
+                        FR.push(new vscode.FoldingRange(sectionStart, i - 1, vscode.FoldingRangeKind.Region));
+                    }
+                    sectionStart = i;
+                }
+            }
+            if (sectionStart > 0) {
+                FR.push(new vscode.FoldingRange(sectionStart, document.lineCount - 1, vscode.FoldingRangeKind.Region));
+            }
+            return FR;
+        }
+    });
     let json_template = vscode.commands.registerCommand('extension.JSONTemplate', jsonTemplate);
     const collection = vscode.languages.createDiagnosticCollection('test');
     if (vscode.window.activeTextEditor) {
@@ -91,23 +109,23 @@ function validateTransforms(document, collection) {
             let line = split_lines[index];
             if (line) {
                 [...diff].forEach(element => {
-                    match = line.search("=" + element);
-                    if (match != -1) {
+                    let re = new RegExp("=.*?(" + element + ")(?=( |$|,))");
+                    match = re.exec(line);
+                    if (match != null) {
                         diag.push({
                             code: '',
                             message: 'Transform not present',
-                            range: new vscode.Range(new vscode.Position(index, match), new vscode.Position(index, match + element.length)),
+                            range: new vscode.Range(new vscode.Position(index, match.index + match[0].length - match[1].length), new vscode.Position(index, match.index + match[0].length)),
                             severity: vscode.DiagnosticSeverity.Error,
                             source: '',
                             relatedInformation: [
-                                new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, match), new vscode.Position(index + 1, match + element.length))), '')
+                                new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, match[1]), new vscode.Position(index + 1, match[1] + element.length))), '')
                             ]
                         });
                     }
                 });
             }
         }
-        console.log('abc');
     }
     return (diag);
 }
@@ -123,11 +141,36 @@ function DiagnosticCheck(document, collection) {
     diag.push(...updateDiagnostics(document, collection));
     diag.push(...keywordValidator(document, collection));
     diag.push(...validateTransforms(document, collection));
+    diag.push(...paranthesesValidator(document, collection));
     collection.set(document.uri, diag);
 }
 function updateDiagnostics(document, collection) {
     let diag = [];
     if (document) {
+        if (document.getText().search('\\[sourcetype:') == -1) {
+            diag.push({
+                code: '',
+                message: 'Source type stanza not present. It is the start point for the parser',
+                range: new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)),
+                severity: vscode.DiagnosticSeverity.Error,
+                source: '',
+                relatedInformation: [
+                    new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0))), 'Source type stanza not present. It is the start point for the parser')
+                ]
+            });
+        }
+        if (document.getText().search('START_TIME_FIELD *?=') == -1) {
+            diag.push({
+                code: '',
+                message: 'START_TIME_FIELD not present. Logs will not be parsed without start time field',
+                range: new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)),
+                severity: vscode.DiagnosticSeverity.Error,
+                source: '',
+                relatedInformation: [
+                    new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0))), 'START_TIME_FIELD not present. Logs will not be parsed without start time field')
+                ]
+            });
+        }
         let lines = document.getText().split('\n');
         let reg_match_regex = new RegExp(/(r\|.+?(\n|$))|REGEX *= *(.+?($|\n))/, 'ig');
         for (let index = 0; index < lines.length; index++) {
@@ -749,6 +792,61 @@ function keywordValidator(document, collection) {
         collection.clear();
     }
     return (diag);
+}
+function paranthesesValidator(document, collection) {
+    let diag = [];
+    if (document) {
+        let lines = document.getText().split('\n');
+        for (let index = 0; index < lines.length; index++) {
+            let line = lines[index];
+            if (lines[index].search("REGEX") == -1) {
+                let line_len = line.length;
+                let reg_match_regex = new RegExp(/[[\(\[{]*.*[\)\]}]*/, 'ig');
+                var match = reg_match_regex.exec(line);
+                if (match != null) {
+                    if (parenthesesAreBalanced(match[0]) == false) {
+                        let match_exp = match[0];
+                        let message = 'Paranthesis not balanced.';
+                        diag.push({
+                            code: '',
+                            message: 'Paranthesis not balanced.',
+                            range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index + line_len)),
+                            severity: vscode.DiagnosticSeverity.Error,
+                            source: '',
+                            relatedInformation: [
+                                new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, match.index), new vscode.Position(index + 1, match.index + match_exp.length))), message)
+                            ]
+                        });
+                    }
+                }
+            }
+        }
+    }
+    else {
+        collection.clear();
+    }
+    return (diag);
+}
+function parenthesesAreBalanced(string) {
+    let match_exp = true;
+    var parentheses = "[]{}()", stack = [], i, character, bracePosition;
+    for (i = 0; character = string[i]; i++) {
+        bracePosition = parentheses.indexOf(character);
+        if (bracePosition === -1) {
+            continue;
+        }
+        if (bracePosition % 2 === 0) {
+            stack.push(bracePosition + 1); // push next expected brace position
+        }
+        else {
+            if (stack.length === 0 || stack.pop() !== bracePosition) {
+                match_exp = false;
+                return (match_exp);
+            }
+        }
+    }
+    return stack.length === 0;
+    return match_exp;
 }
 // this method is called when your extension is deactivated
 function deactivate() {

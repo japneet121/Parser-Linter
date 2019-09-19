@@ -158,9 +158,6 @@ function validateTransforms(document: vscode.TextDocument, collection: vscode.Di
 				});
 			}
 		}
-		console.log('abc');
-		
-
 	}
 	return (diag);
 }
@@ -178,6 +175,7 @@ function DiagnosticCheck(document: vscode.TextDocument, collection: vscode.Diagn
     diag.push(...updateDiagnostics(document, collection));
 	diag.push(...keywordValidator(document, collection));
 	diag.push(...validateTransforms(document, collection));
+	diag.push(...paranthesesValidator(document, collection));
     collection.set(document.uri, diag);
 
 }
@@ -832,6 +830,70 @@ function keywordValidator(document: vscode.TextDocument, collection: vscode.Diag
     }
     return(diag);
 }
+
+function paranthesesValidator(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): Array<any> {
+    let diag = [];
+    if (document) {
+
+        let lines = document.getText().split('\n');
+
+        for (let index = 0; index < lines.length; index++) {
+             
+            let line = lines[index];
+            if (lines[index].search("REGEX") == -1) {
+                let line_len = line.length;
+                let reg_match_regex = new RegExp(/[[\(\[{]*.*[\)\]}]*/, 'ig');
+                var match = reg_match_regex.exec(line);
+                if (match != null) {
+                    if (parenthesesAreBalanced(match[0]) == false) {
+                        let match_exp = match[0];
+                        let message = 'Paranthesis not balanced.';
+                        diag.push({
+                            code: '',
+                            message: 'Paranthesis not balanced.',
+                            range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index + line_len)),
+                            severity: vscode.DiagnosticSeverity.Error,
+                            source: '',
+                            relatedInformation: [
+                                new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, match.index), new vscode.Position(index + 1, match.index + match_exp.length))), message)
+                            ]
+                        });
+                    }
+                }
+            }
+        }
+    } else {
+        collection.clear();
+    } return (diag);
+}
+
+function parenthesesAreBalanced(string: String): Boolean {
+    let match_exp = true;
+    var parentheses = "[]{}()",
+        stack = [],
+        i, character, bracePosition;
+
+    for (i = 0; character = string[i]; i++) {
+        bracePosition = parentheses.indexOf(character);
+
+        if (bracePosition === -1) {
+            continue;
+        }
+
+        if (bracePosition % 2 === 0) {
+            stack.push(bracePosition + 1); // push next expected brace position
+        } else {
+            if (stack.length === 0 || stack.pop() !== bracePosition) {
+                match_exp = false;
+                return (match_exp);
+            }
+        }
+    }
+
+    return stack.length === 0;
+    return match_exp;
+}
+
 // this method is called when your extension is deactivated
 export function deactivate() {
 }
