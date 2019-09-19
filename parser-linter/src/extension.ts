@@ -118,16 +118,17 @@ function validateTransforms(document: vscode.TextDocument, collection: vscode.Di
 			if (line) {
 				[...diff].forEach(element => {
 
-					match = line.search("="+element);
-					if (match != -1) {
+					let re=new RegExp("=.*?("+element+")(?=( |$|,))");
+					match=re.exec(line);
+					if (match != null) {
 						diag.push({
 							code: '',
 							message: 'Transform not present',
-							range: new vscode.Range(new vscode.Position(index, match), new vscode.Position(index, match + element.length)),
+							range: new vscode.Range(new vscode.Position(index, match.index+match[0].length-match[1].length), new vscode.Position(index, match.index + match[0].length)),
 							severity: vscode.DiagnosticSeverity.Error,
 							source: '',
 							relatedInformation: [
-								new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, match), new vscode.Position(index + 1, match + element.length))), '')
+								new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, match[1]), new vscode.Position(index + 1, match[1] + element.length))), '')
 							]
 						});
 					}
