@@ -13,28 +13,28 @@
 		},
 		{
 			"include" :"#moustaches"
-		},
-		{
-			"include":"#field"
 		}
+		
 	],
 	"repository": {
 		"moustaches" :{
-			"name":"variable.language.sumoparser",
+			
 
 			"patterns" :[
 				{
-					"name":"variable.language.escape.sumoparse",
+					"name":"string.comments.sumoparse",
 					"begin": "{{",
 					"end": "}}",
 					"beginCaptures": {
 						"0": {
-							"name": "punctuation.definition.list.begin.python"
+							"name":"string.comments.sumoparse.begin.sumoparse"
+							
 						}
 					},
 					"endCaptures": {
 						"0": {
-							"name": "punctuation.definition.list.end.python"
+							"name":"string.comments.sumoparse.end.sumoparse"
+							
 						}
 				}}
 			]
@@ -67,14 +67,6 @@
 				}
 			]
 
-
-		},
-		"field":{
-			"name": "keyword.operator.assignment.sumoparser",
-			"patterns": [{
-				"name": "keyword.operator.sumoparse",
-				"match": "\\b(URL|Hostname)\\b"
-			}]
 
 		}
 

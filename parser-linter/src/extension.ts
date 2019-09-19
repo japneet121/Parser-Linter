@@ -13,12 +13,18 @@ export function activate(context: vscode.ExtensionContext) {
           
             }
         },
-    );
+
+	);
+	let json_template = vscode.commands.registerCommand('extension.JSONTemplate',jsonTemplate);
+
 	const collection = vscode.languages.createDiagnosticCollection('test');
+
     if (vscode.window.activeTextEditor) {
         DiagnosticCheck(vscode.window.activeTextEditor.document,collection); 
     }
-    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
+
+    context.subscriptions.push(json_template,disposable,vscode.window.onDidChangeActiveTextEditor(editor => {
+
         if (editor) {
             DiagnosticCheck(editor.document,collection); 
         }
@@ -27,6 +33,59 @@ export function activate(context: vscode.ExtensionContext) {
         DiagnosticCheck(document,collection); 
     });
 }
+
+
+
+
+function jsonTemplate() {
+
+		let editor = vscode.window.activeTextEditor;
+
+		if (editor) {
+			let document = editor.document;
+			
+
+			// Get the word within the selection
+			
+			
+			editor.edit(editBuilder => {
+				editBuilder.insert(new vscode.Position(1,1),"####################################################\n\
+## Parser Name ##\n\
+####################################################\n\
+\n\
+[sourcetype:Parser_Name]\n\
+FORMAT=JSON\n\
+START_TIME_FIELD = eventTime\n\
+TIME_PARSER = time_formatter\n\
+transform = transform_name\n\
+transform-factor=<parser_Name>_Factor\n\
+\n\
+[transform:trasnform_name]\n\
+VARIABLE_TRANSFORM_INDEX = field_name\n\
+VARIABLE_TRANSFORM:filed_value1 = trasnform_value1\n\
+VARIABLE_TRANSFORM:field_value2 = transform_value2\n\
+\n\
+[transform:<parser_Name>_Factor]\n\
+#LINKS\n\
+FIELD_TYPE:IP Address_field = IP Address\n\
+FIELD_TYPE:User_field = User\n\
+FIELD_TYPE:Hostname_field = Host Name\n\
+FIELD_TYPE:File_field = File\n\
+\n\
+#FACTORS\n\
+FACTOR:Identity:<mandatory_field>=optional_fields\n\
+\n\
+FACTOR:Application=optional_fields\n\
+				");
+			
+			});
+		}
+	}
+
+	
+
+
+
 function validateTransforms(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): Array<any> {
 	let diag = [];
 	if (document) {
@@ -82,6 +141,7 @@ function validateTransforms(document: vscode.TextDocument, collection: vscode.Di
 	}
 	return (diag);
 }
+
 function difference(setA: Set<any>, setB: Set<any>) {
 	var _difference = new Set(setA);
 	for (var elem of setB) {
@@ -109,7 +169,7 @@ function updateDiagnostics(document: vscode.TextDocument, collection: vscode.Dia
 			let line=lines[index];
 			let line_len= line.length;
             var match = reg_match_regex.exec(line);
-            console.log(match);
+            
             if(!match){
                 
             }
@@ -121,7 +181,7 @@ function updateDiagnostics(document: vscode.TextDocument, collection: vscode.Dia
                 else{
                     match_exp=match[0].substring(2);
                 }
-                console.log(match);
+                
                 
                 try {
                     let r=new RegExp(match_exp);
