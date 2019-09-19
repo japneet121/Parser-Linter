@@ -1,97 +1,264 @@
 'use strict';
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { truncateSync } from 'fs';
 
 export function activate(context: vscode.ExtensionContext) {
-	let disposable = vscode.languages.registerHoverProvider('sumoparse', {
-		provideHover(document, position, token) {
+    let disposable = vscode.languages.registerHoverProvider('sumoparse', {
+        provideHover(document, position, token) {
 
-			const range = document.getWordRangeAtPosition(position);
-			const word = document.getText(range);
-			return returnHoverInfo(word);
+            const range = document.getWordRangeAtPosition(position);
+            const word = document.getText(range);
+            return returnHoverInfo(word);
+          
+            }
+        },
 
-		}
-	},
 	);
-	const collection = vscode.languages.createDiagnosticCollection('test');
-	if (vscode.window.activeTextEditor) {
-		DiagnosticCheck(vscode.window.activeTextEditor.document, collection);
-	}
-	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
-		if (editor) {
-			DiagnosticCheck(editor.document, collection);
+
+
+	let disposable1 = vscode.languages.registerFoldingRangeProvider('sumoparse', {
+		provideFoldingRanges(document, context, token) {
+			//console.log('folding range invoked'); // comes here on every character edit
+			let sectionStart = 0, FR = [], re = /\[(transform|sourcetype):.*\]/;  // regex to detect start of region
+
+			for (let i = 0; i < document.lineCount; i++) {
+
+				if (re.test(document.lineAt(i).text)) {
+					if (sectionStart > 0) {
+						FR.push(new vscode.FoldingRange(sectionStart, i - 1, vscode.FoldingRangeKind.Region));
+					}
+					sectionStart = i;
+				}
+			}
+			if (sectionStart > 0) { FR.push(new vscode.FoldingRange(sectionStart, document.lineCount - 1, vscode.FoldingRangeKind.Region)); }
+
+			return FR;
 		}
-	}));
-	vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
-		DiagnosticCheck(document, collection);
 	});
+
+	let json_template = vscode.commands.registerCommand('extension.JSONTemplate',jsonTemplate);
+
+	const collection = vscode.languages.createDiagnosticCollection('test');
+
+    if (vscode.window.activeTextEditor) {
+        DiagnosticCheck(vscode.window.activeTextEditor.document,collection); 
+    }
+
+    context.subscriptions.push(json_template,disposable,vscode.window.onDidChangeActiveTextEditor(editor => {
+
+        if (editor) {
+            DiagnosticCheck(editor.document,collection); 
+        }
+    }));
+    vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
+        DiagnosticCheck(document,collection); 
+    });
 }
 
-function DiagnosticCheck(document: vscode.TextDocument, collection: vscode.DiagnosticCollection) {
-	let diag = [];
-	diag.push(...updateDiagnostics(document, collection));
-	diag.push(...keywordValidator(document, collection));
-	diag.push(...paranthesesValidator(document, collection));
-	collection.set(document.uri, diag);
 
-}
 
-function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): Array<any> {
+
+function jsonTemplate() {
+
+		let editor = vscode.window.activeTextEditor;
+
+		if (editor) {
+			let document = editor.document;
+			
+
+			// Get the word within the selection
+			
+			
+			editor.edit(editBuilder => {
+				editBuilder.insert(new vscode.Position(1,1),"####################################################\n\
+## Parser Name ##\n\
+####################################################\n\
+\n\
+[sourcetype:Parser_Name]\n\
+FORMAT=JSON\n\
+START_TIME_FIELD = eventTime\n\
+TIME_PARSER = time_formatter\n\
+transform = transform_name\n\
+transform-factor=<parser_Name>_Factor\n\
+\n\
+[transform:trasnform_name]\n\
+VARIABLE_TRANSFORM_INDEX = field_name\n\
+VARIABLE_TRANSFORM:filed_value1 = trasnform_value1\n\
+VARIABLE_TRANSFORM:field_value2 = transform_value2\n\
+\n\
+[transform:<parser_Name>_Factor]\n\
+#LINKS\n\
+FIELD_TYPE:IP Address_field = IP Address\n\
+FIELD_TYPE:User_field = User\n\
+FIELD_TYPE:Hostname_field = Host Name\n\
+FIELD_TYPE:File_field = File\n\
+\n\
+#FACTORS\n\
+FACTOR:Identity:<mandatory_field>=optional_fields\n\
+\n\
+FACTOR:Application=optional_fields\n\
+				");
+			
+			});
+		}
+	}
+
+	
+
+
+
+function validateTransforms(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): Array<any> {
 	let diag = [];
 	if (document) {
-		let lines = document.getText().split('\n');
-		let reg_match_regex = new RegExp(/(r\|.+?(\n|$))|REGEX *= *(.+?($|\n))/, 'ig');
-		for (let index = 0; index < lines.length; index++) {
+		let lines = document.getText();
+		let reg_match_regex = new RegExp(/^((transform.*?)|(VARIABLE_TRANSFORM:.*?))= *(.*)/, 'igm');
+		var match = reg_match_regex.exec(lines);
+		let transforms_called = [];
+		let trans = [];
+		while (match) {
+			trans = match[4].split(',');
+			trans = trans.map(s => s.trim());
 
-			let line = lines[index];
-			let line_len = line.length;
-			var match = reg_match_regex.exec(line);
-			console.log(match);
-			if (!match) {
-
-			}
-			while (match) {
-				let match_exp = '';
-				if (match[3]) {
-					match_exp = match[3];
-				}
-				else {
-					match_exp = match[0].substring(2);
-				}
-				console.log(match);
-
-				try {
-					let r = new RegExp(match_exp);
-				}
-				catch (exception) {
-					var message = exception.message;
-					diag.push({
-						code: '',
-						message: 'Not a Valid Regex',
-						range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index + match_exp.length + line_len)),
-						severity: vscode.DiagnosticSeverity.Error,
-						source: '',
-						relatedInformation: [
-							new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, match.index), new vscode.Position(index + 1, match.index + match[0].length))), message)
-						]
-					});
-
-				}
-				match = reg_match_regex.exec(line);
-			}
-
+			transforms_called.push(...trans);
+			match = reg_match_regex.exec(lines);
 		}
-	} else {
-		collection.clear();
+		transforms_called = [...new Set(transforms_called)];
+		reg_match_regex = new RegExp(/\[transform:(.*?)\]/, 'igm');
+		match = reg_match_regex.exec(lines);
+		let transforms_present = [];
+		while (match) {
+			transforms_present.push(match[1].trim());
+			match = reg_match_regex.exec(lines);
+		}
+		let transforms_called_set = new Set(transforms_called);
+		let transforms_present_set = new Set(transforms_present);
+		let diff = difference(transforms_called_set, transforms_present_set);
+		let split_lines = lines.split('\n')
+		for (let index = 0; index < lines.length; index++) {
+			let line = split_lines[index];
+			if (line) {
+				[...diff].forEach(element => {
+
+					let re=new RegExp("=.*?("+element+")(?=( |$|,))");
+					match=re.exec(line);
+					if (match != null) {
+						diag.push({
+							code: '',
+							message: 'Transform not present',
+							range: new vscode.Range(new vscode.Position(index, match.index+match[0].length-match[1].length), new vscode.Position(index, match.index + match[0].length)),
+							severity: vscode.DiagnosticSeverity.Error,
+							source: '',
+							relatedInformation: [
+								new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, match[1]), new vscode.Position(index + 1, match[1] + element.length))), '')
+							]
+						});
+					}
+
+				});
+			}
+		}
 	}
 	return (diag);
 }
 
-function returnHoverInfo(word: string) {
+function difference(setA: Set<any>, setB: Set<any>) {
+	var _difference = new Set(setA);
+	for (var elem of setB) {
+		_difference.delete(elem);
+	}
+	return _difference;
+}
+
+function DiagnosticCheck(document: vscode.TextDocument, collection: vscode.DiagnosticCollection){
+    let diag=[];
+    diag.push(...updateDiagnostics(document, collection));
+	diag.push(...keywordValidator(document, collection));
+	diag.push(...validateTransforms(document, collection));
+	diag.push(...paranthesesValidator(document, collection));
+    collection.set(document.uri, diag);
+
+}
+
+function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): Array<any> {
+    let diag=[];
+    if (document) {
+		if(document.getText().search('\\[sourcetype:')==-1){
+			diag.push({
+				code: '',
+				message: 'Source type stanza not present. It is the start point for the parser',
+				range: new vscode.Range(new vscode.Position(0,0), new vscode.Position(0,0)),
+				severity: vscode.DiagnosticSeverity.Error,
+				source: '',
+				relatedInformation: [
+					new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0))), 'Source type stanza not present. It is the start point for the parser')
+				]
+			});
+		}
+		if(document.getText().search('START_TIME_FIELD *?=')==-1){
+			diag.push({
+				code: '',
+				message: 'START_TIME_FIELD not present. Logs will not be parsed without start time field',
+				range: new vscode.Range(new vscode.Position(0,0), new vscode.Position(0,0)),
+				severity: vscode.DiagnosticSeverity.Error,
+				source: '',
+				relatedInformation: [
+					new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0))), 'START_TIME_FIELD not present. Logs will not be parsed without start time field')
+				]
+			});
+		}
+        let lines = document.getText().split('\n');
+        let reg_match_regex = new RegExp(/(r\|.+?(\n|$))|REGEX *= *(.+?($|\n))/, 'ig');
+        for (let index = 0; index < lines.length; index++) {
+            
+			let line=lines[index];
+			let line_len= line.length;
+            var match = reg_match_regex.exec(line);
+            
+            if(!match){
+                
+            }
+            while (match) {
+                let match_exp='';
+                if(match[3]){
+                    match_exp=match[3];
+                }
+                else{
+                    match_exp=match[0].substring(2);
+                }
+                
+                
+                try {
+                    let r=new RegExp(match_exp);
+                }
+                catch (exception) {
+                    var message = exception.message;
+                    diag.push({
+                        code: '',
+                        message: 'Not a Valid Regex',
+                        range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index+match_exp.length+line_len)),
+                        severity: vscode.DiagnosticSeverity.Error,
+                        source: '',
+                        relatedInformation: [
+                            new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index+1, match.index), new vscode.Position(index+1, match.index+match[0].length))), message)
+                        ]
+                    });
+                    
+                }
+                match = reg_match_regex.exec(line);
+            }
+            
+        }
+    } else {
+        collection.clear();
+    }
+    return(diag);
+}
+
+function returnHoverInfo(word:string){
 	if (word == "ALIAS") {
-		return new vscode.Hover({
-			language: "ALIAS",
-			value: "ALIAS:<old_field_name> = <alias_field_name>\n\
+		return new vscode.Hover({language:"ALIAS",
+			value:"ALIAS:<old_field_name> = <alias_field_name>\n\
 default = none\n\
 <old_field_name> and <new_field_name> are required\n\
 Creates a read only reference between alias_field_name and old_field_name.\n\
@@ -99,35 +266,32 @@ Note if the value of <old_field_name> is None, it will not create the alias.\n"
 		})
 
 	}
-	else if (word == "SET") {
+	else if (word == "SET"){
 		return new vscode.Hover({
 			language: "SET",
 			value: "default = none\nsets field to this value\nThe field name is treated as a Mustache template if it contains two curly braces '{{'. The template can access any event fields that have been parsed prior to this instruction. For example, Response_{{_match_count}} would set the field named Response_0 if the _match_count field was set to 0."
 		})
 
 	}
-	else if (word == "BURNDOWN_FACTOR") {
-		return new vscode.Hover({
-			language: "BURNDOWN",
-			value: "BURNDOWN_FACTOR = <factor_type>\n\
+	else if (word == "BURNDOWN_FACTOR"){
+		return new vscode.Hover({language:"BURNDOWN",
+			value:"BURNDOWN_FACTOR = <factor_type>\n\
 default = none\n\
 \n\
 Declares that an investigation will be created from every event with the declared factor type. An investigation is a tracking construct to track a security incident to resolution."})
 	}
 
-	else if (word == "FORMAT") {
-		return new vscode.Hover({
-			language: "FORMAT",
-			value: "FORMAT = <format_type>\n\
+	else if (word == "FORMAT"){
+		return new vscode.Hover({language:"FORMAT",
+			value:"FORMAT = <format_type>\n\
 default = REGEX\n\
 one of REGEX, CSV, JSON, XML\n\
 Specifies the overall format of the messages being parsed."})
 	}
 
-	else if (word == "FACTOR") {
-		return new vscode.Hover({
-			language: "FACTOR",
-			value: "FACTOR:<factor_type>:<required_fields> = <field_name>, <field_name>, ...\n\
+	else if (word == "FACTOR"){
+		return new vscode.Hover({language:"FACTOR",
+			value:"FACTOR:<factor_type>:<required_fields> = <field_name>, <field_name>, ...\n\
 default = none\n\
 \n\
 factor_type can be Endpoint, Identity, Network, Application, Threat, Alerts, or Operational. For additional information, see Factoring chapter.\n\
@@ -140,7 +304,7 @@ FACTOR:Identity:(userIdentity_userName, userIdentifty_principalId_actorName), so
 \n\
 <field_name> is in either of the following forms:\n\
 - a string matching a field name in the given event, in which case only that field with the matching name will be added to the factor.\n\
-    - r|<regex> in which case all field names matching the regex will be added to the factor."})
+	- r|<regex> in which case all field names matching the regex will be added to the factor."})
 	}
 	else if (word == "FIELD_TYPE") {
 		return new vscode.Hover({
@@ -150,7 +314,7 @@ default = none\n\
 Marks the given field as a link field and specifies the link type.\n\
 <field_name> is in either of the following forms:\n\
 a string matching a field name in the given event, in which case only that field with the matching name will have its type set.\n\
-    r|<regex> in which case all field names matching the regex will have their types set.\n\
+	r|<regex> in which case all field names matching the regex will have their types set.\n\
 Special Cases:\n\
 If <field_type> is set to “None”, then that field will be set to ignore any FIELD_TYPE statements after it, leaving matching fields untyped.\n\
 Order of Application:\n\
@@ -165,7 +329,7 @@ Marks the field as a hub with the description provided. This makes it so that th
 	else if (word == "START_TIME_HANDLING") {
 		return new vscode.Hover({
 			language: "START_TIME_HANDLING",
-			value: " START_TIME_HANDLING = <GIVEN|ROUND|CONSTANT>\n\
+			value: "	START_TIME_HANDLING = <GIVEN|ROUND|CONSTANT>\n\
 default = GIVEN\n\
 if GIVEN, ignore DEFAULT_START_TIME, start time defaults to current time on parsing machine\n\
 if ROUND, round start down using DEFAULT_START_TIME as the rounding increment in milliseconds, start time defaults to current time on parsing machine\n\
@@ -217,8 +381,8 @@ value is used in various ways depending on the END_TIME setting"})
 		return new vscode.Hover({
 			language: "TIME_PARSER",
 			value: "TIME_PARSER = <time format 1>, <time format 2> ...\n\
-        default = None\n\
-        The time formats are specified as in Java DateTimeFormatter. If a format contains a comma, enclose it in double quotes. There are some special additional cases:\n\
+		default = None\n\
+		The time formats are specified as in Java DateTimeFormatter. If a format contains a comma, enclose it in double quotes. There are some special additional cases:\n\
 X1 treats the time as if it’s in epoch seconds.\n\
 X1000 treats the time as if it’s in epoch milliseconds.\n\
 The formats will be tried in the order they are specified until one of them succeeds.\n\
@@ -228,8 +392,8 @@ START_TIME_FIELD and END_TIME_FIELD use this parser when an actual field is spec
 		return new vscode.Hover({
 			language: "TIMEZONE",
 			value: "TIMEZONE = <string>\n\
-        default = none\n\
-        \n\
+		default = none\n\
+		\n\
 [Note = this description needs to be synced with the code. It may not be correct.]\n\
 time zones are described either using the IANA time zone database names,\n\
 using ISO-8601 style, as in ‘+07:00’,\n\
@@ -285,17 +449,17 @@ TRANSFORM_CASCADE = <transform>,<transform>,.."})
 		return new vscode.Hover({
 			language: "VARIABLE_TRANSFORM_INDEX",
 			value: "VARIABLE_TRANSFORM_INDEX:<field-to-parse_name> = <int>, <int>, …\n\
-        Selects which transform from a variable transform group to apply based on the value(s) of the specified field(s) known as index field(s). Applicable to FORMAT = CSV only.  \n\
-        \n\
-        <field-to-parse_name> defaults to _$logEntry.\n\
-        \n\
-        <int>, <int> … specify the list of field indices (with zero being the first field) used to select fields. The values of those fields are concatenated using \"-\" as the separator; then the result is used to find the correct VARIABLE_TRANSFORM by its <type value>. The transform is applied then to the field-to-parse. That completes the execution of the transform group.\n\
-        VARIABLE_TRANSFORM_INDEX:<field-to-parse_name> = <field_name1>, <field_name 2> …\n\
-        Selects which transform from a variable transform group to apply based on the value(s) of the specified field(s) known as index field(s).\n\
-        \n\
-        <field-to-parse_name> defaults to _$logEntry.\n\
-        \n\
-        <field_name 1>, <field_name 2> … specify the list of fields whose values are used to choose which variable transform to execute. The values are concatenated using \"-\" as the separator; then the result is used to find the correct VARIABLE_TRANSFORM by its <type value>. That transform is applied then to the field-to-parse. That completes the execution of the transform group."})
+		Selects which transform from a variable transform group to apply based on the value(s) of the specified field(s) known as index field(s). Applicable to FORMAT = CSV only.	\n\
+		\n\
+		<field-to-parse_name> defaults to _$logEntry.\n\
+		\n\
+		<int>, <int> … specify the list of field indices (with zero being the first field) used to select fields. The values of those fields are concatenated using \"-\" as the separator; then the result is used to find the correct VARIABLE_TRANSFORM by its <type value>. The transform is applied then to the field-to-parse. That completes the execution of the transform group.\n\
+		VARIABLE_TRANSFORM_INDEX:<field-to-parse_name> = <field_name1>, <field_name 2> …\n\
+		Selects which transform from a variable transform group to apply based on the value(s) of the specified field(s) known as index field(s).\n\
+		\n\
+		<field-to-parse_name> defaults to _$logEntry.\n\
+		\n\
+		<field_name 1>, <field_name 2> … specify the list of fields whose values are used to choose which variable transform to execute. The values are concatenated using \"-\" as the separator; then the result is used to find the correct VARIABLE_TRANSFORM by its <type value>. That transform is applied then to the field-to-parse. That completes the execution of the transform group."})
 	}
 	else if (word == "VARIABLE_TRANSFORM") {
 		return new vscode.Hover({
@@ -318,7 +482,7 @@ Using the ‘default’ transform and the ‘none’ transform together without 
 	else if (word == "DROP") {
 		return new vscode.Hover({
 			language: "DROP",
-			value: " DROP = <true|false|empty|regex>\n\
+			value: "	DROP = <true|false|empty|regex>\n\
 DROP:<field_name> = <true|false|empty|regex>\n\
 default = true\n\
 Possible values, and their meaning\n\
@@ -621,117 +785,115 @@ This Attributes is  Specific to JSON Format"})
 
 
 function keywordValidator(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): Array<any> {
-	let diag = [];
-	if (document) {
+    let diag = []; 
+    if (document) {
+        
+        let lines = document.getText().split('\n');      
+        let reserved_keywords = ['IP Address',"Network","MAC Address","URL","Hash","Registry Key","User","Host Name","File","Geo Location"];
+        
+        for (let index = 0; index < lines.length; index++) {
 
-		let lines = document.getText().split('\n');
-		let reserved_keywords = ['IP Address', "Network", "MAC Address", "URL", "Hash", "Registry Key", "User", "Host Name", "File", "Geo Location"];
-
-		for (let index = 0; index < lines.length; index++) {
-
-			let line = lines[index];
-			let line_len = line.length;
-			let reg_match_regex = new RegExp(/field_type\s*:[a-zA-Z0-9_\-]+=\s*([a-zA-Z_\-\\0-9 ]+)/, 'ig');
-			var match = reg_match_regex.exec(line);
-
-			while (match) {
-				let match_exp = '';
-				if (match[1]) {
-					match_exp = match[1];
-				}
-				else {
-					match_exp = match[0].substring(11).replace("=", "").trim();
-				}
-				//console.log(match_exp);
-				if (reserved_keywords.indexOf(match_exp) < 0) {
+			let line=lines[index];
+			let line_len= line.length;
+            let reg_match_regex = new RegExp(/field_type\s*:[a-zA-Z0-9_\-]+=\s*([a-zA-Z_\-\\0-9 ]+)/, 'ig');
+            var match = reg_match_regex.exec(line);
+  
+            while (match) {
+                let match_exp= '';
+              if(match[1]){
+                    match_exp=match[1];
+                }
+                else{
+                    match_exp=match[0].substring(11).replace("=","").trim();
+                }
+                //console.log(match_exp);
+                if(reserved_keywords.indexOf(match_exp) < 0){
 					var message = 'Not a Valid Linktype. \n You can choose a lintype from below : \n IP Address , Network , MAC Address , URL , Hash , Registry Key , User , Host Name , File , Geo Location';
-					diag.push({
-						code: '',
-						message: 'Not a Valid Linktype',
-						range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index + match_exp.length + line_len)),
-						severity: vscode.DiagnosticSeverity.Error,
-						source: '',
-						relatedInformation: [
-							new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, match.index), new vscode.Position(index + 1, match.index + match[0].length))), message)
-						]
-					});
-					//console.log("Present");
-				}
-				match = reg_match_regex.exec(line);
-			}
-
-		}
-	} else {
-		collection.clear();
-	}
-	return (diag);
+                    diag.push({
+                        code: '',
+                        message: 'Not a Valid Linktype',
+                        range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index+match_exp.length+line_len)),
+                        severity: vscode.DiagnosticSeverity.Error,
+                        source: '',
+                        relatedInformation: [
+                            new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index+1, match.index), new vscode.Position(index+1, match.index+match[0].length))), message)
+                        ]
+                    });
+                    //console.log("Present");
+                }
+                match = reg_match_regex.exec(line);
+        }
+        
+    }
+}else {
+        collection.clear();
+    }
+    return(diag);
 }
 
 function paranthesesValidator(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): Array<any> {
-	let diag = [];
-	if (document) {
+    let diag = [];
+    if (document) {
 
-		let lines = document.getText().split('\n');
+        let lines = document.getText().split('\n');
 
-		for (let index = 0; index < lines.length; index++) {
-			 
-			let line = lines[index];
-			if (lines[index].search("REGEX") == -1) {
-				let line_len = line.length;
-				let reg_match_regex = new RegExp(/[[\(\[{]*.*[\)\]}]*/, 'ig');
-				var match = reg_match_regex.exec(line);
-				if (match != null) {
-					if (parenthesesAreBalanced(match[0]) == false) {
-						let match_exp = match[0];
-						let message = 'Paranthesis not balanced.';
-						diag.push({
-							code: '',
-							message: 'Paranthesis not balanced',
-							range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index + line_len)),
-							severity: vscode.DiagnosticSeverity.Error,
-							source: '',
-							relatedInformation: [
-								new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, match.index), new vscode.Position(index + 1, match.index + match_exp.length))), message)
-							]
-						});
-					}
-					//match = reg_match_regex.exec(line);
-
-
-				}
-			}
-		}
-	} else {
-		collection.clear();
-	} return (diag);
+        for (let index = 0; index < lines.length; index++) {
+             
+            let line = lines[index];
+            if (lines[index].search("REGEX") == -1) {
+                let line_len = line.length;
+                let reg_match_regex = new RegExp(/[[\(\[{]*.*[\)\]}]*/, 'ig');
+                var match = reg_match_regex.exec(line);
+                if (match != null) {
+                    if (parenthesesAreBalanced(match[0]) == false) {
+                        let match_exp = match[0];
+                        let message = 'Paranthesis not balanced.';
+                        diag.push({
+                            code: '',
+                            message: 'Paranthesis not balanced.',
+                            range: new vscode.Range(new vscode.Position(index, match.index), new vscode.Position(index, match.index + line_len)),
+                            severity: vscode.DiagnosticSeverity.Error,
+                            source: '',
+                            relatedInformation: [
+                                new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, match.index), new vscode.Position(index + 1, match.index + match_exp.length))), message)
+                            ]
+                        });
+                    }
+                }
+            }
+        }
+    } else {
+        collection.clear();
+    } return (diag);
 }
 
 function parenthesesAreBalanced(string: String): Boolean {
-	let match_exp = true;
-	var parentheses = "[]{}()",
-		stack = [],
-		i, character, bracePosition;
+    let match_exp = true;
+    var parentheses = "[]{}()",
+        stack = [],
+        i, character, bracePosition;
 
-	for (i = 0; character = string[i]; i++) {
-		bracePosition = parentheses.indexOf(character);
+    for (i = 0; character = string[i]; i++) {
+        bracePosition = parentheses.indexOf(character);
 
-		if (bracePosition === -1) {
-			continue;
-		}
+        if (bracePosition === -1) {
+            continue;
+        }
 
-		if (bracePosition % 2 === 0) {
-			stack.push(bracePosition + 1); // push next expected brace position
-		} else {
-			if (stack.length === 0 || stack.pop() !== bracePosition) {
-				match_exp = false;
-				return (match_exp);
-			}
-		}
-	}
+        if (bracePosition % 2 === 0) {
+            stack.push(bracePosition + 1); // push next expected brace position
+        } else {
+            if (stack.length === 0 || stack.pop() !== bracePosition) {
+                match_exp = false;
+                return (match_exp);
+            }
+        }
+    }
 
-	return stack.length === 0;
-	return match_exp;
+    return stack.length === 0;
+    return match_exp;
 }
+
 // this method is called when your extension is deactivated
 export function deactivate() {
 }
