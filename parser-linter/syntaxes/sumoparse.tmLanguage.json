@@ -7,15 +7,45 @@
 		},
 		{
 			"include": "#strings"
+		},
+		{
+			"include" :"#comments"
+		},
+		{
+			"include" :"#moustaches"
 		}
+		
 	],
 	"repository": {
+		"moustaches" :{
+			
+
+			"patterns" :[
+				{
+					"name":"string.comments.sumoparse",
+					"begin": "{{",
+					"end": "}}",
+					"beginCaptures": {
+						"0": {
+							"name":"string.comments.sumoparse.begin.sumoparse"
+							
+						}
+					},
+					"endCaptures": {
+						"0": {
+							"name":"string.comments.sumoparse.end.sumoparse"
+							
+						}
+				}}
+			]
+		},
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.sumoparse",
-				"match": "\\b(if|while|for|return|transform|TRANSFORM|FIELD_TYPE|field_type|sourcetype|SOURCETYPE)\\b"
+				"match": "\\b(transform|TRANSFORM|FIELD_TYPE|SET|sourcetype|SOURCETYPE|FIELD|ALIAS|BURNDOWN|FORMAT|FACTOR|HUB|START_TIME_HANDLING|DEFAULT_START_TIME|DEFAULT_END_TIME|END_TIME_HANDLING|START_TIME_FIELD|TIME_PARSER|TIME_ZONE|SET|TRANSFORM_IF_PRESENT|TRANSFORM_FIELD_IF_PRESENT|TRANSFORM_ALL|TRANSFORM_CASCADE|DROP|RENAME_FIELD|COPY_FIELD|FIELD_PREFIX|FIELD_SUFFIX|ITER_PREFIX|ITER_SUFFIX|ADD_VALUES|JOIN_LIST|SPLIT_LIST|REPLACE_LIST_WITH_ELEMENT|REVERSE_LIST|WRAPPER|EVENT_MULTILINE|REGEX|REPEAT_MATCH|STRIP_FIELDS|FIELD_DELIMS|FIELD_HEADER_DELIMS|FIELD_START_INDEX|FIELD_QUOTE|FIELD_HEADER_QUOTE|FIELDS|OPTIONAL_FIELDS|ROOT_TAG|LOG_ENTRY_TAG|DICTIONARY_TAG|FIELD_TAG|JSON_DROP_NULLS)\\b"
 			}]
 		},
+
 		"strings": {
 			"name": "string.quoted.double.sumoparse",
 			"begin": "\"",
@@ -26,7 +56,21 @@
 					"match": "\\\\."
 				}
 			]
+		},
+		"comments" :{
+			"name":"string.comments.sumoparse",
+			"patterns" :[
+				{
+					"name":"comment.line.hash.sumoparse",
+					"begin":"#",
+					"end":"\n"
+				}
+			]
+
+
 		}
+
+
 	},
 	"scopeName": "source.conf"
 }
