@@ -185,6 +185,30 @@ function DiagnosticCheck(document: vscode.TextDocument, collection: vscode.Diagn
 function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): Array<any> {
     let diag=[];
     if (document) {
+		if(document.getText().search('\\[sourcetype:')==-1){
+			diag.push({
+				code: '',
+				message: 'Source type stanza not present. It is the start point for the parser',
+				range: new vscode.Range(new vscode.Position(0,0), new vscode.Position(0,0)),
+				severity: vscode.DiagnosticSeverity.Error,
+				source: '',
+				relatedInformation: [
+					new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0))), 'Source type stanza not present. It is the start point for the parser')
+				]
+			});
+		}
+		if(document.getText().search('START_TIME_FIELD *?=')==-1){
+			diag.push({
+				code: '',
+				message: 'START_TIME_FIELD not present. Logs will not be parsed without start time field',
+				range: new vscode.Range(new vscode.Position(0,0), new vscode.Position(0,0)),
+				severity: vscode.DiagnosticSeverity.Error,
+				source: '',
+				relatedInformation: [
+					new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0))), 'START_TIME_FIELD not present. Logs will not be parsed without start time field')
+				]
+			});
+		}
         let lines = document.getText().split('\n');
         let reg_match_regex = new RegExp(/(r\|.+?(\n|$))|REGEX *= *(.+?($|\n))/, 'ig');
         for (let index = 0; index < lines.length; index++) {
