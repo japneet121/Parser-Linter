@@ -3,6 +3,7 @@
 	"displayName": "parser-linter",
 	"description": "Development Tool for Sumo Parsing Language",
 	"version": "0.0.1",
+	"publisher":"sumologic",
 	"engines": {
 		"vscode": "^1.38.0"
 	},
