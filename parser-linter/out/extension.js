@@ -58,7 +58,7 @@ async function getGrok(){
     console.log(text)
     var suggestions = []
     for(var key in groks.groks){
-        if(text.match(groks.groks[key])){
+        if(text.match("^"+groks.groks[key]+"$")){
             suggestions.push(key)
             
             /*const selection = editor.selection;

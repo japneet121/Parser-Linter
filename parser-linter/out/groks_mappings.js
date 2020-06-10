@@ -47,7 +47,7 @@ exports.groks={
     "LOGLEVEL": "([A|a]lert|ALERT|[T|t]race|TRACE|[D|d]ebug|DEBUG|[N|n]otice|NOTICE|[I|i]nfo|INFO|[W|w]arn?(?:ing)?|WARN?(?:ING)?|[E|e]rr?(?:or)?|ERR?(?:OR)?|[C|c]rit?(?:ical)?|CRIT?(?:ICAL)?|[F|f]atal|FATAL|[S|s]evere|SEVERE|EMERG(?:ENCY)?|[Ee]merg(?:ency)?)",
     "RUBY_LOGLEVEL": "(?:DEBUG|FATAL|ERROR|WARN|INFO)",
     "CISCO_ACTION": "Built|Teardown|Deny|Denied|denied|requested|permitted|denied by ACL|discarded|est-allowed|Dropping|created|deleted",
-    "CISCO_REASON": "Duplicate TCP SYN|Failed to locate egress interface|Invalid transport field|No matching connection|DNS Response|DNS Query|(?:%{WORD}\s*)*",
+    //"CISCO_REASON": "Duplicate TCP SYN|Failed to locate egress interface|Invalid transport field|No matching connection|DNS Response|DNS Query|(?:%{WORD}\s*)*",
     "CISCO_DIRECTION": "Inbound|inbound|Outbound|outbound",
     "CISCO_XLATE_TYPE": "static|dynamic",
     "RT_FLOW_EVENT": "(RT_FLOW_SESSION_CREATE|RT_FLOW_SESSION_CLOSE|RT_FLOW_SESSION_DENY)",

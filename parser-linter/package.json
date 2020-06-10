@@ -2,7 +2,7 @@
 	"name": "parser-linter",
 	"displayName": "parser-linter",
 	"description": "Development Tool for Sumo Parsing Language",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"publisher":"sumologic",
 	"engines": {
 		"vscode": "^1.38.0"
@@ -68,7 +68,7 @@
 	},
 	"languages": [{
         "id": "sumoparsing",
-        "extensions": [ ".conf" ],
+        "extensions": [ ".conf",".grok" ],
         "aliases": [ "SumoParsing", "sumoparsing" ]
 	}],
 	"files.associations": {
