@@ -1,6 +1,9 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode = require("vscode");
+const editor = vscode.window.activeTextEditor;
+const groks= require('./groks_mappings.js');
+
 function activate(context) {
     let disposable = vscode.languages.registerHoverProvider('sumoparse', {
         provideHover(document, position, token) {
@@ -37,11 +40,46 @@ function activate(context) {
             DiagnosticCheck(editor.document, collection);
         }
     }));
+    
+    
+	let disposable_grok = vscode.commands.registerCommand("extensions.gettheGrok",getGrok);
+
+    context.subscriptions.push(disposable_grok);
+    
     vscode.workspace.onDidSaveTextDocument((document) => {
         DiagnosticCheck(document, collection);
     });
 }
 exports.activate = activate;
+
+
+async function getGrok(){
+    const text = editor.document.getText(editor.selection);
+    console.log(text)
+    var suggestions = []
+    for(var key in groks.groks){
+        if(text.match("^"+groks.groks[key]+"$")){
+            suggestions.push(key)
+            
+            /*const selection = editor.selection;
+            // Get the word within the selection
+			const word = editor.document.getText(selection);
+			editor.edit(editBuilder => {
+				editBuilder.replace(selection, "hello");
+			});*/
+        }
+    }
+    const value = await vscode.window.showQuickPick(suggestions, { placeHolder: 'Select the GROK' })
+            
+    if(value != undefined){
+        editor.edit(editBuilder => {
+            editBuilder.replace(editor.selection, "%{"+value+":variable_name}");
+        })
+    }
+	
+}
+
+
 function jsonTemplate() {
     let editor = vscode.window.activeTextEditor;
     if (editor) {

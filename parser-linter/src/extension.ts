@@ -45,12 +45,12 @@ export function activate(context: vscode.ExtensionContext) {
         DiagnosticCheck(vscode.window.activeTextEditor.document,collection); 
     }
 
-    context.subscriptions.push(json_template,disposable,vscode.window.onDidChangeActiveTextEditor(editor => {
+	context.subscriptions.push(json_template,disposable,vscode.window.onDidChangeActiveTextEditor(editor => {
 
         if (editor) {
             DiagnosticCheck(editor.document,collection); 
         }
-    }));
+	}));
     vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
         DiagnosticCheck(document,collection); 
     });
@@ -116,7 +116,7 @@ FACTOR:<Factor_Name>:<mandatory_field>=<optional_fields>\n\
 
 
 function validateTransforms(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): Array<any> {
-	let diag = [];
+	var diag:any[] = [];
 	if (document) {
 		let lines = document.getText();
 		let reg_match_regex = new RegExp(/^((transform.*?)|(VARIABLE_TRANSFORM:.*?))= *(.*)/, 'igm');
@@ -157,7 +157,7 @@ function validateTransforms(document: vscode.TextDocument, collection: vscode.Di
 							severity: vscode.DiagnosticSeverity.Error,
 							source: '',
 							relatedInformation: [
-								new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, match[1]), new vscode.Position(index + 1, match[1] + element.length))), '')
+								new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, new vscode.Range(new vscode.Position(index + 1, parseInt(match[1])), new vscode.Position(index + 1, parseInt(match[1]) + element.length))), '')
 							]
 						});
 					}
