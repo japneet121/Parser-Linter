@@ -40,6 +40,9 @@
 			{
 				"command": "extensions.gettheGrok",
 				"title": "Get Grok"
+			},			{
+				"command": "extensions.gettheFlattenedJSON",
+				"title": "Flatten JSON"
 			}
 		],
 		"menus": {
@@ -47,6 +50,11 @@
                 {
                     "command": "extensions.gettheGrok",
                     "group": "Groks"
+                   
+				},
+				{
+                    "command": "extensions.gettheFlattenedJSON",
+                    "group": "JSON"
                    
                 }
             ]
@@ -68,7 +76,7 @@
 	},
 	"languages": [{
         "id": "sumoparsing",
-        "extensions": [ ".conf",".grok" ],
+        "extensions": [ ".conf",".grok"],
         "aliases": [ "SumoParsing", "sumoparsing" ]
 	}],
 	"files.associations": {

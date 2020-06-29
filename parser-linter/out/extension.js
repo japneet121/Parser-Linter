@@ -49,9 +49,46 @@ function activate(context) {
     vscode.workspace.onDidSaveTextDocument((document) => {
         DiagnosticCheck(document, collection);
     });
+
+    let disposable_json_flattened = vscode.commands.registerCommand("extensions.gettheFlattenedJSON",flattenJSON);
+
+    context.subscriptions.push(disposable_json_flattened);
+    
+    vscode.workspace.onDidSaveTextDocument((document) => {
+        DiagnosticCheck(document, collection);
+    });
 }
 exports.activate = activate;
 
+function flattenJSON() {
+    const data = editor.document.getText(editor.selection);
+    console.log(data)
+    var result = {};
+    function recurse(cur, prop) {
+        if (Object(cur) !== cur) {
+            result[prop] = cur;
+        } else if (Array.isArray(cur)) {
+            for (var i = 0, l = cur.length; i < l; i++)
+            recurse(cur[i], prop + "." + i + "");
+            if (l == 0) result[prop] = [];
+        } else {
+            var isEmpty = true;
+            for (var p in cur) {
+                isEmpty = false;
+                recurse(cur[p], prop ? prop + "." + p : p);
+            }
+            if (isEmpty && prop) result[prop] = {};
+        }
+    }
+    recurse(data, "");
+    console.log("Result is : "+ JSON.stringify(result))
+    const value = vscode.window.showQuickPick(JSON.stringify(result), { placeHolder: 'Select the JSON inflated' })
+    if(value != undefined){
+        editor.edit(editBuilder => {
+            editBuilder.replace(editor.selection, value);
+        })
+    }
+};
 
 async function getGrok(){
     const text = editor.document.getText(editor.selection);
