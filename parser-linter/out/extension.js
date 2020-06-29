@@ -62,10 +62,7 @@ exports.activate = activate;
 
 function flattenJSON() {
     const data = editor.document.getText(editor.selection);
-    //console.log(data)
     var result = {};
-
-    //data = JSON.parse(data)
     function recurse(cur, prop) {
         if (!(Object(cur) === cur)) {
             console.log("Object of cur: "+ typeof Object(cur))
@@ -85,13 +82,9 @@ function flattenJSON() {
         }
     }
     recurse(JSON.parse(data), "");
-    //console.log("Result is : "+ JSON.stringify(result))
-    //const value = vscode.window.showQuickPick(JSON.stringify(result), { placeHolder: 'Select the JSON inflated' })
-    //if(value != undefined){
         editor.edit(editBuilder => {
             editBuilder.replace(editor.selection, JSON.stringify(result));
         })
-    //}
 };
 
 async function getGrok(){
