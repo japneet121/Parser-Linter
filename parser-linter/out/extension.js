@@ -62,38 +62,14 @@ exports.activate = activate;
 
 function flattenJSON() {
     const data = editor.document.getText(editor.selection);
-    console.log(data)
+    //console.log(data)
     var result = {};
-    data = `{
-        "id": "0001",
-        "type": "donut",
-        "name": "Cake",
-        "ppu": 0.55,
-        "batters":
-            {
-                "batter":
-                    [
-                        { "id": "1001", "type": "Regular" },
-                        { "id": "1002", "type": "Chocolate" },
-                        { "id": "1003", "type": "Blueberry" },
-                        { "id": "1004", "type": "Devil's Food" }
-                    ]
-            },
-        "topping":
-            [
-                { "id": "5001", "type": "None" },
-                { "id": "5002", "type": "Glazed" },
-                { "id": "5005", "type": "Sugar" },
-                { "id": "5007", "type": "Powdered Sugar" },
-                { "id": "5006", "type": "Chocolate with Sprinkles" },
-                { "id": "5003", "type": "Chocolate" },
-                { "id": "5004", "type": "Maple" }
-            ]
-    }`
-    data = JSON.parse(data)
+
+    //data = JSON.parse(data)
     function recurse(cur, prop) {
-        if (Object(cur) !== cur) {
-            console.log("Fatt gya bhai !")
+        if (!(Object(cur) === cur)) {
+            console.log("Object of cur: "+ typeof Object(cur))
+            console.log("cur: "+"start"+typeof cur)
             result[prop] = cur;
         } else if (Array.isArray(cur)) {
             for (var i = 0, l = cur.length; i < l; i++)
@@ -108,14 +84,14 @@ function flattenJSON() {
             if (isEmpty && prop) result[prop] = {};
         }
     }
-    recurse(data, "");
-    console.log("Result is : "+ JSON.stringify(result))
-    const value = vscode.window.showQuickPick(JSON.stringify(result), { placeHolder: 'Select the JSON inflated' })
-    if(value != undefined){
+    recurse(JSON.parse(data), "");
+    //console.log("Result is : "+ JSON.stringify(result))
+    //const value = vscode.window.showQuickPick(JSON.stringify(result), { placeHolder: 'Select the JSON inflated' })
+    //if(value != undefined){
         editor.edit(editBuilder => {
-            editBuilder.replace(editor.selection, result);
+            editBuilder.replace(editor.selection, JSON.stringify(result));
         })
-    }
+    //}
 };
 
 async function getGrok(){
