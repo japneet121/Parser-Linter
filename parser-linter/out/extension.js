@@ -57,16 +57,22 @@ function activate(context) {
     vscode.workspace.onDidSaveTextDocument((document) => {
         DiagnosticCheck(document, collection);
     });
+
+    let disposable_json_unflattened = vscode.commands.registerCommand("extensions.gettheUnFlattenedJSON",unflattenJSON);
+
+    context.subscriptions.push(disposable_json_unflattened);
+    
+    vscode.workspace.onDidSaveTextDocument((document) => {
+        DiagnosticCheck(document, collection);
+    });
 }
 exports.activate = activate;
 
 function flattenJSON() {
-    const data = editor.document.getText(editor.selection);
+    const data = JSON.parse(editor.document.getText(editor.selection));
     var result = {};
     function recurse(cur, prop) {
         if (!(Object(cur) === cur)) {
-            console.log("Object of cur: "+ typeof Object(cur))
-            console.log("cur: "+"start"+typeof cur)
             result[prop] = cur;
         } else if (Array.isArray(cur)) {
             for (var i = 0, l = cur.length; i < l; i++)
@@ -81,10 +87,34 @@ function flattenJSON() {
             if (isEmpty && prop) result[prop] = {};
         }
     }
-    recurse(JSON.parse(data), "");
+    recurse(data, "");
         editor.edit(editBuilder => {
             editBuilder.replace(editor.selection, JSON.stringify(result));
         })
+};
+
+function unflattenJSON() {
+    "use strict";
+    const data = JSON.parse(editor.document.getText(editor.selection));
+    console.log(data);
+    if (Object(data) !== data || Array.isArray(data)) return data;
+    var regex = /\.?([^.\[\]]+)|\[(\d+)\]/g,
+        resultholder = {};
+    for (var p in data) {
+        var cur = resultholder,
+            prop = "",
+            m;
+            var res = p.replace(/\.(?=\d)/g, "[");
+        var res = res.replace(/(?<=\d)\./g, "].");
+        while (m = regex.exec(res)) {
+            cur = cur[prop] || (cur[prop] = (m[2] ? [] : {}));
+            prop = m[2] || m[1];
+        }
+        cur[prop] = data[p];
+    }
+    editor.edit(editBuilder => {
+        editBuilder.replace(editor.selection, JSON.stringify(resultholder[""] || resultholder));
+    })
 };
 
 async function getGrok(){

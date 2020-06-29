@@ -40,9 +40,14 @@
 			{
 				"command": "extensions.gettheGrok",
 				"title": "Get Grok"
-			},			{
+			},
+			{
 				"command": "extensions.gettheFlattenedJSON",
 				"title": "Flatten JSON"
+			},
+			{
+				"command": "extensions.gettheUnFlattenedJSON",
+				"title": "UnFlatten JSON"
 			}
 		],
 		"menus": {
@@ -54,6 +59,11 @@
 				},
 				{
                     "command": "extensions.gettheFlattenedJSON",
+                    "group": "JSON"
+                   
+				},
+				{
+                    "command": "extensions.gettheUnFlattenedJSON",
                     "group": "JSON"
                    
                 }
