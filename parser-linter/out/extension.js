@@ -89,7 +89,7 @@ function flattenJSON() {
     }
     recurse(data, "");
         editor.edit(editBuilder => {
-            editBuilder.replace(editor.selection, JSON.stringify(result));
+            editBuilder.replace(editor.selection, JSON.stringify(result, null, 2));
         })
 };
 
@@ -113,7 +113,7 @@ function unflattenJSON() {
         cur[prop] = data[p];
     }
     editor.edit(editBuilder => {
-        editBuilder.replace(editor.selection, JSON.stringify(resultholder[""] || resultholder));
+        editBuilder.replace(editor.selection, JSON.stringify((resultholder[""] || resultholder),null,2));
     })
 };
 
