@@ -10,26 +10,29 @@
 	"categories": [
 		"Other"
 	],
-	"activationEvents": [
-		"*", "onLanguage:sumoparsing"
-	],
 	"main": "./out/extension.js",
+	"activationEvents": [
+		 "*","onLanguage:sumoparsing"
+	],
 	"contributes": {
 		"languages": [{
             "id": "sumoparse",
             "aliases": ["Sumo Parsing Language", "sumoparse"],
             "extensions": [".conf"],
-            "configuration": "./language-configuration.json"
-        }],
+			"configuration": "./language-configuration.json"
+		}
+	],
         "grammars": [{
             "language": "sumoparse",
             "scopeName": "source.conf",
-            "path": "./syntaxes/sumoparse.tmLanguage.json"
+			"path": "./syntaxes/sumoparse.tmLanguage.json",
+			"when": "editorLangId != json"
 		}],
 		"snippets": [
 			{
 				"language": "sumoparse",
-				"path": "./snippets/sumoparse.snippets.json"
+				"path": "./snippets/sumoparse.snippets.json",
+				"when": "editorLangId != json"
 			}
 		],
 		"commands": [
@@ -48,23 +51,36 @@
 			{
 				"command": "extensions.gettheUnFlattenedJSON",
 				"title": "UnFlatten JSON"
+			},
+			{
+				"command": "extensions.gettheFlattenedXML",
+				"title": "Flatten Binary XML"
 			}
 		],
 		"menus": {
             "editor/context": [
                 {
                     "command": "extensions.gettheGrok",
-                    "group": "Groks"
+					"group": "Groks",
+					"when": "editorLangId != json"
                    
 				},
 				{
                     "command": "extensions.gettheFlattenedJSON",
-                    "group": "JSON"
+					"group": "JSON",
+					"when": "editorLangId == json"
                    
 				},
 				{
                     "command": "extensions.gettheUnFlattenedJSON",
-                    "group": "JSON"
+					"group": "JSON",
+					"when": "editorLangId == json"
+                   
+				},
+				{
+                    "command": "extensions.gettheFlattenedXML",
+					"group": "XML",
+					"when": "editorLangId == xml"
                    
                 }
             ]
@@ -86,10 +102,11 @@
 	},
 	"languages": [{
         "id": "sumoparsing",
-        "extensions": [ ".conf",".grok"],
+        "extensions": [ ".conf"],
         "aliases": [ "SumoParsing", "sumoparsing" ]
 	}],
 	"files.associations": {
-        "*.conf": "sumoparsing"
+		"*.conf": "sumoparsing",
+		"*.php": ""
     }
 }

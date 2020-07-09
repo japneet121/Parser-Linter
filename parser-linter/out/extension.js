@@ -65,8 +65,93 @@ function activate(context) {
     vscode.workspace.onDidSaveTextDocument((document) => {
         DiagnosticCheck(document, collection);
     });
+
+    let disposable_xml_flattened = vscode.commands.registerCommand("extensions.gettheFlattenedXML",flattenWindowsXML);
+
+    context.subscriptions.push(disposable_xml_flattened);
+    
+    vscode.workspace.onDidSaveTextDocument((document) => {
+        DiagnosticCheck(document, collection);
+    });
 }
 exports.activate = activate;
+
+function flattenWindowsXML() {
+    try {
+        var xpath = require('xpath')
+        var dom = require('xmldom').DOMParser;
+        var node = null;
+        var data = (editor.document.getText(editor.selection)).toString();
+        data = data.split("---\n");
+        console.log(data);
+        var result = "";
+        data.forEach(element => {
+            var doc = new dom().parseFromString(element);
+            var nodesDoc =xpath.select("/", doc);
+            //console.log(nodesDoc);
+            let tags = ["System", "EventData", "UserData", "RenderingInfo","#text"];
+            for (var x=0; x<nodesDoc[0].childNodes[0].childNodes.length; x++){
+                let visited = [];
+                if (`${nodesDoc[0].childNodes[0].childNodes[`${x}`].nodeName}` != "#text"){
+                var prefix = (`${nodesDoc[0].childNodes[0].childNodes[`${x}`].nodeName}` == "RenderingInfo") ? `${nodesDoc[0].childNodes[0].childNodes[`${x}`].nodeName}.` : '';
+                for (var i=0 ; i<nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes.length; i++){ 
+                    if((nodesDoc[0].childNodes[0].childNodes[`${x}`].nodeName == "System" || nodesDoc[0].childNodes[0].childNodes[`${x}`].nodeName == "RenderingInfo") && nodesDoc[0].childNodes[0].childNodes[x].childNodes[i].nodeName != "#text"){
+                        
+                       try{
+                        for (let index = 0; index <= nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].attributes.length; index++) {
+                    var trial = nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].attributes[index].nodeName;
+                    result += `${prefix}${nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].nodeName}.${nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].attributes[index].nodeName} -> ${nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].attributes[index].nodeValue}\n`
+                    visited.push(`${nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].nodeName}`);
+                        }
+                }
+                    catch(err){
+                        if (visited.indexOf(`${nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].nodeName}`)  < 0 && `${nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].nodeName}` != '#text'){
+                        try {
+                            var trial = nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].childNodes['0'].data;
+                            result += `${prefix}${nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].nodeName} -> ${trial}\n`
+                        } catch (error) {
+                            var trial = "";
+                            result += `${prefix}${nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].nodeName} -> ${trial}\n`
+                        }
+                    }
+            
+                    }
+                    }
+                    else if (nodesDoc[0].childNodes[0].childNodes[`${x}`].nodeName == "EventData"){
+                        for(var i=0; i<nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes.length; i++){
+                        if (`${nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].nodeName}` != '#text'){
+                            result += `${nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[0].parentNode.nodeName}.${nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].attributes['0'].value} -> ${nodesDoc[0].childNodes[0].childNodes[`${x}`].childNodes[i].childNodes['0'].data}\n`;
+                            } 
+                    }
+                    }
+                    else if(nodesDoc[0].childNodes[0].childNodes[x].nodeName == "UserData"){
+                        for (let index = 0; index < nodesDoc[0].childNodes[0].childNodes[x].childNodes.length; index++) {
+                        if(nodesDoc[0].childNodes[0].childNodes[x].childNodes[index].nodeName != '#text'){
+                            for (let index2 = 0; index2 < nodesDoc[0].childNodes[0].childNodes[x].childNodes[0].childNodes.length; index2++) {
+                                result += `${nodesDoc[0].childNodes[0].childNodes[x].nodeName}.${nodesDoc[0].childNodes[0].childNodes[x].childNodes[index].nodeName}.${nodesDoc[0].childNodes[0].childNodes[x].childNodes[index].childNodes[index2].nodeName} -> ${nodesDoc[0].childNodes[0].childNodes[x].childNodes[index].childNodes[index2].firstChild.data}\n`;
+                            }            
+                        }
+                        }
+                    }
+                    else if (tags.indexOf(`${nodesDoc[0].childNodes[0].childNodes[x].childNodes[i].nodeName}`)  < 0){
+                        console.log("Out !");
+                    }
+                }
+                }
+                }
+                //console.log(result);
+            result +="---\n";
+        });
+        editor.edit(editBuilder => {
+            editBuilder.replace(editor.selection, `${result}`);
+        })
+    }catch (error) {
+        editor.edit(editBuilder => {
+            editBuilder.replace(editor.selection, `${error}`);
+        })
+    }
+
+}
 
 function flattenJSON() {
     const data = JSON.parse(editor.document.getText(editor.selection));
@@ -104,8 +189,8 @@ function unflattenJSON() {
         var cur = resultholder,
             prop = "",
             m;
-            var res = p.replace(/\.(?=\d)/g, "[");
-        var res = res.replace(/(?<=\d)\./g, "].");
+            var res = p.replace(/\.(?=\d)/g, "[");
+        var res = res.replace(/(?<=\d)\./g, "].");
         while (m = regex.exec(res)) {
             cur = cur[prop] || (cur[prop] = (m[2] ? [] : {}));
             prop = m[2] || m[1];
