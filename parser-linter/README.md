@@ -6,8 +6,10 @@ Parser Linter provides editor support for the Sumologic's Parsing Language
 - REGEX debugging(node style)
 - Bracket Autocomplition
 - Basic Language validations
-
-
+- Windows Binary XML flattener
+- JSON flattener
+- JSON unflattener
+- GROK suggestions
 
 ### 1.0.0
 
